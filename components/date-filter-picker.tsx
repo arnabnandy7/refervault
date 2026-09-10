@@ -21,20 +21,42 @@ export function DateFilterPicker({
   label,
   name,
   defaultValue,
+  error,
+  variant = "filter",
 }: {
   label: string;
   name: string;
-  defaultValue: string;
+  defaultValue?: string;
+  error?: string;
+  variant?: "filter" | "entry";
 }) {
-  const selected = parts(defaultValue);
+  const initialValue = defaultValue ?? "";
+  const selected = parts(initialValue);
   const today = new Date();
-  const [value, setValue] = useState(defaultValue);
+  const [value, setValue] = useState(initialValue);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState({
     year: selected?.year ?? today.getFullYear(),
     month: selected?.month ?? today.getMonth(),
   });
   const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const form = root.current?.closest("form");
+    if (!form) return;
+    const reset = () => {
+      const resetDate = parts(initialValue);
+      const now = new Date();
+      setValue(initialValue);
+      setView({
+        year: resetDate?.year ?? now.getFullYear(),
+        month: resetDate?.month ?? now.getMonth(),
+      });
+      setOpen(false);
+    };
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, [initialValue]);
 
   useEffect(() => {
     if (!open) return;
@@ -64,16 +86,21 @@ export function DateFilterPicker({
     });
 
   return (
-    <div className="date-filter">
+    <div
+      className={variant === "entry" ? "entry-field entry-date-field" : "date-filter"}
+    >
       <span>{label}</span>
-      <input type="hidden" name={name} value={value} />
+      <input type="hidden" name={name} value={value} readOnly />
       <div className="date-picker" ref={root}>
         <button
           className="date-picker-trigger"
           type="button"
           onClick={() => setOpen((current) => !current)}
           aria-expanded={open}
+          aria-haspopup="dialog"
           aria-label={`${label}: ${value || "not selected"}`}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${name}-error` : undefined}
         >
           <span className={value ? "" : "placeholder"}>
             {value || "Select date"}
@@ -81,7 +108,7 @@ export function DateFilterPicker({
           <span aria-hidden="true">▦</span>
         </button>
         {open && (
-          <div className="calendar-popover">
+          <div className="calendar-popover" role="dialog" aria-label={`${label} calendar`}>
             <div className="calendar-heading">
               <button
                 type="button"
@@ -159,6 +186,7 @@ export function DateFilterPicker({
           </div>
         )}
       </div>
+      {error ? <small id={`${name}-error`}>{error}</small> : null}
     </div>
   );
 }

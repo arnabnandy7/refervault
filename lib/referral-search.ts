@@ -20,12 +20,20 @@ export type ReferralSearchRow = {
   jobId: string | null;
   company: string | null;
   originalEmails: string | null;
+  mobileNumbers: string | null;
   referredEmail: string | null;
   referralDate: string | null;
+  experience: string | null;
   statusCode: string;
   status: string;
+  referredTo: string | null;
+  currentLocation: string | null;
+  preferredLocation: string | null;
+  noticePeriod: string | null;
+  remarks: string | null;
   poc: string | null;
   skillset: string | null;
+  linkedin: string | null;
 };
 
 const value = (raw: RawSearchParams, key: string) => {
@@ -111,9 +119,13 @@ function buildReferralQuery(filters: ReferralFilters) {
 
 const select = `SELECT r.id, c.name AS candidate_name, j.job_code, company.name AS company_name,
   (SELECT GROUP_CONCAT(email.value, ', ') FROM candidate_contacts email WHERE email.candidate_id = c.id AND email.contact_type = 'email') AS original_emails,
+  (SELECT GROUP_CONCAT(phone.value, ', ') FROM candidate_contacts phone WHERE phone.candidate_id = c.id AND phone.contact_type = 'phone') AS mobile_numbers,
   r.referred_email, r.referred_date, r.status_code, s.label AS status_label,
+  r.referral_destination, c.current_location, c.preferred_locations,
+  r.notice_period_raw, r.remarks, c.linkedin_url,
   COALESCE(p.raw_label, p.name, p.external_id) AS poc,
-  COALESCE(r.skillset_snapshot, c.skillset) AS skillset`;
+  COALESCE(r.skillset_snapshot, c.skillset) AS skillset,
+  COALESCE(r.experience_raw, c.experience_raw) AS experience`;
 
 function mapRows(rows: Awaited<ReturnType<Client["execute"]>>["rows"]) {
   return rows.map((row) => ({
@@ -123,30 +135,58 @@ function mapRows(rows: Awaited<ReturnType<Client["execute"]>>["rows"]) {
     company: row.company_name == null ? null : String(row.company_name),
     originalEmails:
       row.original_emails == null ? null : String(row.original_emails),
+    mobileNumbers:
+      row.mobile_numbers == null ? null : String(row.mobile_numbers),
     referredEmail:
       row.referred_email == null ? null : String(row.referred_email),
     referralDate: row.referred_date == null ? null : String(row.referred_date),
+    experience: row.experience == null ? null : String(row.experience),
     statusCode: String(row.status_code),
     status: String(row.status_label),
+    referredTo:
+      row.referral_destination == null
+        ? null
+        : String(row.referral_destination),
+    currentLocation:
+      row.current_location == null ? null : String(row.current_location),
+    preferredLocation:
+      row.preferred_locations == null
+        ? null
+        : String(row.preferred_locations),
+    noticePeriod:
+      row.notice_period_raw == null ? null : String(row.notice_period_raw),
+    remarks: row.remarks == null ? null : String(row.remarks),
     poc: row.poc == null ? null : String(row.poc),
     skillset: row.skillset == null ? null : String(row.skillset),
+    linkedin: row.linkedin_url == null ? null : String(row.linkedin_url),
   })) satisfies ReferralSearchRow[];
 }
 
 export async function searchReferrals(db: Client, filters: ReferralFilters) {
   const { from, where, args } = buildReferralQuery(filters);
-  const countResult = await db.execute({
-    sql: `SELECT COUNT(*) AS total ${from} ${where}`,
-    args,
-  });
+  const requestedOffset = (filters.page - 1) * REFERRALS_PER_PAGE;
+  const [countResult, initialResult] = await db.batch(
+    [
+      { sql: `SELECT COUNT(*) AS total ${from} ${where}`, args },
+      {
+        sql: `${select} ${from} ${where}
+          ORDER BY r.referred_date DESC NULLS LAST, r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`,
+        args: [...args, REFERRALS_PER_PAGE, requestedOffset],
+      },
+    ],
+    "read",
+  );
   const total = Number(countResult.rows[0]?.total ?? 0);
   const pageCount = Math.max(1, Math.ceil(total / REFERRALS_PER_PAGE));
   const page = Math.min(filters.page, pageCount);
-  const result = await db.execute({
-    sql: `${select} ${from} ${where}
-      ORDER BY r.referred_date DESC NULLS LAST, r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`,
-    args: [...args, REFERRALS_PER_PAGE, (page - 1) * REFERRALS_PER_PAGE],
-  });
+  const result =
+    page === filters.page
+      ? initialResult
+      : await db.execute({
+          sql: `${select} ${from} ${where}
+            ORDER BY r.referred_date DESC NULLS LAST, r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`,
+          args: [...args, REFERRALS_PER_PAGE, (page - 1) * REFERRALS_PER_PAGE],
+        });
   const rows = mapRows(result.rows);
   return { rows, total, page, pageCount };
 }

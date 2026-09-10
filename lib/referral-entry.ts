@@ -5,6 +5,8 @@ export type EntryState = {
   status: "idle" | "error" | "success";
   message: string;
   errors: Record<string, string>;
+  values?: Record<string, string>;
+  attempt?: number;
 };
 
 export const initialEntryState: EntryState = {
@@ -17,6 +19,14 @@ const text = (form: FormData, name: string, max = 500) => {
   const value = form.get(name);
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 };
+const entryFields = [
+  "candidateName", "dob", "originalEmails", "mobileNumbers", "experience",
+  "skillset", "currentLocation", "preferredLocation", "noticePeriod",
+  "linkedin", "referredEmail", "referredDate", "statusCode", "referredTo",
+  "company", "jobCodes", "poc", "remarks",
+];
+export const submittedEntryValues = (form: FormData) =>
+  Object.fromEntries(entryFields.map((name) => [name, text(form, name, 3000)]));
 
 const nullable = (value: string) => value || null;
 const id = () => randomInt(1, 281_474_976_710_655);
@@ -50,6 +60,7 @@ export async function createReferralEntry(
   db: Client,
   form: FormData,
 ): Promise<EntryState> {
+  const submittedValues = submittedEntryValues(form);
   const value = {
     candidateName: text(form, "candidateName", 200),
     dob: text(form, "dob", 10),
@@ -104,6 +115,7 @@ export async function createReferralEntry(
       status: "error",
       message: "Please review the highlighted fields.",
       errors,
+      values: submittedValues,
     };
 
   const contacts = [
@@ -130,6 +142,7 @@ export async function createReferralEntry(
         message:
           "The supplied contacts match more than one candidate. Review the email addresses and phone numbers.",
         errors: {},
+        values: submittedValues,
       };
     }
     if (matches.rows[0]) {
@@ -265,6 +278,7 @@ export async function updateReferralEntry(
   referralId: number,
   form: FormData,
 ): Promise<EntryState> {
+  const submittedValues = submittedEntryValues(form);
   const value = {
     candidateName: text(form, "candidateName", 200),
     dob: text(form, "dob", 10),
@@ -303,14 +317,14 @@ export async function updateReferralEntry(
     }
   }
   if (Object.keys(errors).length)
-    return { status: "error", message: "Please review the highlighted fields.", errors };
+    return { status: "error", message: "Please review the highlighted fields.", errors, values: submittedValues };
 
   const existing = await db.execute({
     sql: "SELECT r.candidate_id, r.poc_id, COALESCE(p.raw_label,p.name,p.external_id) poc_label FROM referrals r LEFT JOIN contacts p ON p.id=r.poc_id WHERE r.id = ?",
     args: [referralId],
   });
   if (!existing.rows[0])
-    return { status: "error", message: "The referral no longer exists.", errors: {} };
+    return { status: "error", message: "The referral no longer exists.", errors: {}, values: submittedValues };
   const candidateId = Number(existing.rows[0].candidate_id);
   const existingPocId = existing.rows[0].poc_id == null ? null : Number(existing.rows[0].poc_id);
   const samePoc = value.poc && value.poc === String(existing.rows[0].poc_label ?? "");

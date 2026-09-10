@@ -13,6 +13,17 @@ export default async function NewReferralPage() {
     code: String(row.code),
     label: String(row.label),
   }));
+  const todayParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(new Date())
+      .map((part) => [part.type, part.value]),
+  );
+  const currentDate = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
   return (
     <main className="entry-page">
       <header className="entry-header">
@@ -31,7 +42,10 @@ export default async function NewReferralPage() {
           Capture the person, the opportunity, and the next step in one place.
         </p>
       </section>
-      <ReferralEntryForm statuses={statuses} />
+      <ReferralEntryForm
+        statuses={statuses}
+        initialValues={{ referredDate: currentDate }}
+      />
     </main>
   );
 }

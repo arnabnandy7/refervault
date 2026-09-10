@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { database } from "./db";
 import { currentAdmin } from "./auth-service";
 
-export const COOKIE_NAME = "refervault_session";
+export const COOKIE_NAME =
+  process.env.NODE_ENV === "production"
+    ? "__Host-refervault_session"
+    : "refervault_session";
 export async function getAdmin() {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;

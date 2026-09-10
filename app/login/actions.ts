@@ -3,11 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { database } from "@/lib/db";
-import {
-  authenticate,
-  revokeSession,
-  SESSION_SECONDS,
-} from "@/lib/auth-service";
+import { authenticate, revokeSession } from "@/lib/auth-service";
 import { COOKIE_NAME } from "@/lib/session";
 
 export async function login(_previous: { error: string }, form: FormData) {
@@ -24,9 +20,8 @@ export async function login(_previous: { error: string }, form: FormData) {
     jar.set(COOKIE_NAME, result.token!, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "strict",
       path: "/",
-      maxAge: SESSION_SECONDS,
     });
   } catch {
     return {

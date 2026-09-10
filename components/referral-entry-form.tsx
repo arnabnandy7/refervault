@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { saveReferral } from "@/app/referrals/new/actions";
 import { DateFilterPicker } from "@/components/date-filter-picker";
+import { StoredSuggestionField } from "@/components/stored-suggestion-field";
 import type { EntryState } from "@/lib/referral-entry";
 
 type Status = { code: string; label: string };
@@ -71,12 +72,13 @@ export function ReferralEntryForm({
     submitAction,
     initialEntryState,
   );
+  const displayedValues = { ...initialValues, ...state.values };
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (mode === "create" && state.status === "success") form.current?.reset();
   }, [mode, state.status, state.message]);
   return (
-    <form ref={form} action={action} className="entry-form">
+    <form key={state.attempt ?? 0} ref={form} action={action} className="entry-form">
       <div className="entry-section-heading">
         <span>01</span>
         <div>
@@ -91,14 +93,14 @@ export function ReferralEntryForm({
           required
           placeholder="Full name"
           error={state.errors.candidateName}
-          defaultValue={initialValues.candidateName}
+          defaultValue={displayedValues.candidateName}
         />
         <DateFilterPicker
           label="Date of birth"
           name="dob"
           error={state.errors.dob}
           variant="entry"
-          defaultValue={initialValues.dob}
+          defaultValue={displayedValues.dob}
         />
         <Field
           label="Original email ID"
@@ -106,44 +108,44 @@ export function ReferralEntryForm({
           type="text"
           placeholder="Separate multiple emails with commas"
           error={state.errors.originalEmails}
-          defaultValue={initialValues.originalEmails}
+          defaultValue={displayedValues.originalEmails}
         />
         <Field
           label="Mobile number"
           name="mobileNumbers"
           type="text"
           placeholder="Separate multiple numbers with commas"
-          defaultValue={initialValues.mobileNumbers}
+          defaultValue={displayedValues.mobileNumbers}
         />
         <Field
           label="Experience"
           name="experience"
           placeholder="For example, 5+ or 4.6"
-          defaultValue={initialValues.experience}
+          defaultValue={displayedValues.experience}
         />
         <Field
           label="Skillset"
           name="skillset"
           placeholder="Primary skills and technologies"
-          defaultValue={initialValues.skillset}
+          defaultValue={displayedValues.skillset}
         />
         <Field
           label="Current location"
           name="currentLocation"
           placeholder="City"
-          defaultValue={initialValues.currentLocation}
+          defaultValue={displayedValues.currentLocation}
         />
         <Field
           label="Preferred location"
           name="preferredLocation"
           placeholder="City or cities"
-          defaultValue={initialValues.preferredLocation}
+          defaultValue={displayedValues.preferredLocation}
         />
         <Field
           label="Notice period"
           name="noticePeriod"
           placeholder="Days, LWD, or availability note"
-          defaultValue={initialValues.noticePeriod}
+          defaultValue={displayedValues.noticePeriod}
         />
         <Field
           label="LinkedIn"
@@ -151,7 +153,7 @@ export function ReferralEntryForm({
           type="url"
           placeholder="https://linkedin.com/in/..."
           error={state.errors.linkedin}
-          defaultValue={initialValues.linkedin}
+          defaultValue={displayedValues.linkedin}
         />
       </div>
       <div className="entry-section-heading">
@@ -168,18 +170,18 @@ export function ReferralEntryForm({
           type="email"
           placeholder="Email used for the referral"
           error={state.errors.referredEmail}
-          defaultValue={initialValues.referredEmail}
+          defaultValue={displayedValues.referredEmail}
         />
         <DateFilterPicker
           label="Referred date"
           name="referredDate"
           error={state.errors.referredDate}
           variant="entry"
-          defaultValue={initialValues.referredDate}
+          defaultValue={displayedValues.referredDate}
         />
         <label className="entry-field">
           <span>Status</span>
-          <select name="statusCode" defaultValue={initialValues.statusCode ?? "unknown"}>
+          <select name="statusCode" defaultValue={displayedValues.statusCode ?? "unknown"}>
             {statuses.map((status) => (
               <option key={status.code} value={status.code}>
                 {status.label}
@@ -187,18 +189,20 @@ export function ReferralEntryForm({
             ))}
           </select>
         </label>
-        <Field
+        <StoredSuggestionField
           label="Referred to"
           name="referredTo"
+          field="referredTo"
           placeholder="Job Code, Amex, channel, etc."
-          defaultValue={initialValues.referredTo}
+          defaultValue={displayedValues.referredTo}
         />
-        <Field
+        <StoredSuggestionField
           label="Company"
           name="company"
+          field="company"
           placeholder="Required with job code"
           error={state.errors.company}
-          defaultValue={initialValues.company}
+          defaultValue={displayedValues.company}
         />
         <label className="entry-field">
           <span>Job IDs</span>
@@ -206,7 +210,7 @@ export function ReferralEntryForm({
             name="jobCodes"
             rows={3}
             placeholder="Enter one or more job IDs, separated by commas or new lines"
-            defaultValue={initialValues.jobCodes}
+            defaultValue={displayedValues.jobCodes}
             aria-invalid={Boolean(state.errors.jobCodes)}
             aria-describedby={state.errors.jobCodes ? "jobCodes-error" : undefined}
           />
@@ -220,7 +224,7 @@ export function ReferralEntryForm({
           label="Point of contact"
           name="poc"
           placeholder="Name or employee ID"
-          defaultValue={initialValues.poc}
+          defaultValue={displayedValues.poc}
         />
         <label className="entry-field entry-wide">
           <span>Remarks</span>
@@ -228,7 +232,7 @@ export function ReferralEntryForm({
             name="remarks"
             rows={4}
             placeholder="Notes about the candidate or referral"
-            defaultValue={initialValues.remarks}
+            defaultValue={displayedValues.remarks}
           />
         </label>
       </div>

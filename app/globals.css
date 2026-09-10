@@ -1048,6 +1048,7 @@ p {
   color: #a04435;
 }
 .poc-filter { position: relative; }
+.stored-suggestion-field { position: relative; }
 .poc-suggestions {
   position: absolute;
   z-index: 8;

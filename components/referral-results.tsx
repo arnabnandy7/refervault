@@ -362,6 +362,7 @@ export function ReferralResults({
               {visibleColumns.map((column) => (
                 <th key={column.key}>{column.label}</th>
               ))}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -384,6 +385,9 @@ export function ReferralResults({
                     <Cell column={column.key} row={row} />
                   </td>
                 ))}
+                <td className="row-actions">
+                  <a href={`/referrals/${row.id}/edit`}>Edit</a>
+                </td>
               </tr>
             ))}
           </tbody>

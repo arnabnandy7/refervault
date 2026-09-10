@@ -2,9 +2,17 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { saveReferral } from "@/app/referrals/new/actions";
+import { DateFilterPicker } from "@/components/date-filter-picker";
 import type { EntryState } from "@/lib/referral-entry";
 
 type Status = { code: string; label: string };
+export type ReferralFormValues = Partial<Record<
+  | "candidateName" | "dob" | "originalEmails" | "mobileNumbers"
+  | "experience" | "skillset" | "currentLocation" | "preferredLocation"
+  | "noticePeriod" | "linkedin" | "referredEmail" | "referredDate"
+  | "statusCode" | "referredTo" | "company" | "jobCodes" | "poc" | "remarks",
+  string
+>>;
 const initialEntryState: EntryState = {
   status: "idle",
   message: "",
@@ -18,6 +26,7 @@ function Field({
   required = false,
   placeholder,
   error,
+  defaultValue,
 }: {
   label: string;
   name: string;
@@ -25,6 +34,7 @@ function Field({
   required?: boolean;
   placeholder?: string;
   error?: string;
+  defaultValue?: string;
 }) {
   return (
     <label className="entry-field">
@@ -39,21 +49,32 @@ function Field({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${name}-error` : undefined}
+        defaultValue={defaultValue}
       />
       {error ? <small id={`${name}-error`}>{error}</small> : null}
     </label>
   );
 }
 
-export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
+export function ReferralEntryForm({
+  statuses,
+  initialValues = {},
+  submitAction = saveReferral,
+  mode = "create",
+}: {
+  statuses: Status[];
+  initialValues?: ReferralFormValues;
+  submitAction?: (state: EntryState, form: FormData) => Promise<EntryState>;
+  mode?: "create" | "edit";
+}) {
   const [state, action, pending] = useActionState(
-    saveReferral,
+    submitAction,
     initialEntryState,
   );
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (state.status === "success") form.current?.reset();
-  }, [state.status, state.message]);
+    if (mode === "create" && state.status === "success") form.current?.reset();
+  }, [mode, state.status, state.message]);
   return (
     <form ref={form} action={action} className="entry-form">
       <div className="entry-section-heading">
@@ -70,12 +91,14 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           required
           placeholder="Full name"
           error={state.errors.candidateName}
+          defaultValue={initialValues.candidateName}
         />
-        <Field
+        <DateFilterPicker
           label="Date of birth"
           name="dob"
-          type="date"
           error={state.errors.dob}
+          variant="entry"
+          defaultValue={initialValues.dob}
         />
         <Field
           label="Original email ID"
@@ -83,37 +106,44 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           type="text"
           placeholder="Separate multiple emails with commas"
           error={state.errors.originalEmails}
+          defaultValue={initialValues.originalEmails}
         />
         <Field
           label="Mobile number"
           name="mobileNumbers"
           type="text"
           placeholder="Separate multiple numbers with commas"
+          defaultValue={initialValues.mobileNumbers}
         />
         <Field
           label="Experience"
           name="experience"
           placeholder="For example, 5+ or 4.6"
+          defaultValue={initialValues.experience}
         />
         <Field
           label="Skillset"
           name="skillset"
           placeholder="Primary skills and technologies"
+          defaultValue={initialValues.skillset}
         />
         <Field
           label="Current location"
           name="currentLocation"
           placeholder="City"
+          defaultValue={initialValues.currentLocation}
         />
         <Field
           label="Preferred location"
           name="preferredLocation"
           placeholder="City or cities"
+          defaultValue={initialValues.preferredLocation}
         />
         <Field
           label="Notice period"
           name="noticePeriod"
           placeholder="Days, LWD, or availability note"
+          defaultValue={initialValues.noticePeriod}
         />
         <Field
           label="LinkedIn"
@@ -121,6 +151,7 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           type="url"
           placeholder="https://linkedin.com/in/..."
           error={state.errors.linkedin}
+          defaultValue={initialValues.linkedin}
         />
       </div>
       <div className="entry-section-heading">
@@ -137,16 +168,18 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           type="email"
           placeholder="Email used for the referral"
           error={state.errors.referredEmail}
+          defaultValue={initialValues.referredEmail}
         />
-        <Field
+        <DateFilterPicker
           label="Referred date"
           name="referredDate"
-          type="date"
           error={state.errors.referredDate}
+          variant="entry"
+          defaultValue={initialValues.referredDate}
         />
         <label className="entry-field">
           <span>Status</span>
-          <select name="statusCode" defaultValue="unknown">
+          <select name="statusCode" defaultValue={initialValues.statusCode ?? "unknown"}>
             {statuses.map((status) => (
               <option key={status.code} value={status.code}>
                 {status.label}
@@ -158,12 +191,14 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           label="Referred to"
           name="referredTo"
           placeholder="Job Code, Amex, channel, etc."
+          defaultValue={initialValues.referredTo}
         />
         <Field
           label="Company"
           name="company"
           placeholder="Required with job code"
           error={state.errors.company}
+          defaultValue={initialValues.company}
         />
         <label className="entry-field">
           <span>Job IDs</span>
@@ -171,7 +206,11 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
             name="jobCodes"
             rows={3}
             placeholder="Enter one or more job IDs, separated by commas or new lines"
+            defaultValue={initialValues.jobCodes}
+            aria-invalid={Boolean(state.errors.jobCodes)}
+            aria-describedby={state.errors.jobCodes ? "jobCodes-error" : undefined}
           />
+          {state.errors.jobCodes ? <small id="jobCodes-error">{state.errors.jobCodes}</small> : null}
           <small className="field-hint">
             One referral will be created for each job ID. Leading zeros are
             preserved.
@@ -181,6 +220,7 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           label="Point of contact"
           name="poc"
           placeholder="Name or employee ID"
+          defaultValue={initialValues.poc}
         />
         <label className="entry-field entry-wide">
           <span>Remarks</span>
@@ -188,6 +228,7 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
             name="remarks"
             rows={4}
             placeholder="Notes about the candidate or referral"
+            defaultValue={initialValues.remarks}
           />
         </label>
       </div>
@@ -206,7 +247,11 @@ export function ReferralEntryForm({ statuses }: { statuses: Status[] }) {
           disabled={pending}
           type="submit"
         >
-          {pending ? "Saving…" : "Save candidate & referral"}
+          {pending
+            ? "Saving…"
+            : mode === "edit"
+              ? "Save changes"
+              : "Save candidate & referral"}
           <span aria-hidden="true">↗</span>
         </button>
       </div>

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { createClient } from "@libsql/client";
-import { createReferralEntry } from "../lib/referral-entry";
+import { createReferralEntry, updateReferralEntry } from "../lib/referral-entry";
 
 async function testDatabase() {
   const db = createClient({ url: "file::memory:" });
@@ -154,6 +154,36 @@ test("entry form adds referrals to a candidate with an existing contact", async 
         .count,
       4,
     );
+  } finally {
+    db.close();
+  }
+});
+
+test("edit form updates the candidate and selected referral", async () => {
+  const db = await testDatabase();
+  try {
+    await createReferralEntry(db, validEntry());
+    const referralId = Number((await db.execute("SELECT id FROM referrals ORDER BY job_id LIMIT 1")).rows[0].id);
+    const form = validEntry();
+    form.set("candidateName", "Ananya S. Sen");
+    form.set("mobileNumbers", "9000000000");
+    form.set("jobCodes", "000789");
+    form.set("statusCode", "under_review");
+    form.set("remarks", "Updated note");
+    const result = await updateReferralEntry(db, referralId, form);
+    assert.equal(result.status, "success");
+    const updated = await db.execute({
+      sql: `SELECT c.name, j.job_code, r.status_code, r.remarks
+        FROM referrals r JOIN candidates c ON c.id=r.candidate_id
+        LEFT JOIN jobs j ON j.id=r.job_id WHERE r.id=?`,
+      args: [referralId],
+    });
+    assert.deepEqual(
+      { name: updated.rows[0].name, job: updated.rows[0].job_code, status: updated.rows[0].status_code, remarks: updated.rows[0].remarks },
+      { name: "Ananya S. Sen", job: "000789", status: "under_review", remarks: "Updated note" },
+    );
+    const phones = await db.execute("SELECT value FROM candidate_contacts WHERE contact_type='phone'");
+    assert.deepEqual(phones.rows.map((row) => row.value), ["9000000000"]);
   } finally {
     db.close();
   }

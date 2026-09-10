@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { logout } from "@/app/login/actions";
 import { Brand } from "@/components/brand";
 import { ReferralResults } from "@/components/referral-results";
+import { DateFilterPicker } from "@/components/date-filter-picker";
 import { database } from "@/lib/db";
+import {
+  isReferralColumn,
+  type ReferralColumnKey,
+} from "@/lib/referral-columns";
 import {
   REFERRALS_PER_PAGE,
   parseReferralFilters,
@@ -41,12 +46,27 @@ export default async function Dashboard({
   if (!admin) redirect("/login");
   const filters = parseReferralFilters(await searchParams);
   const db = database();
-  const [results, statusesResult] = await Promise.all([
+  const [results, statusesResult, preferenceResult] = await Promise.all([
     searchReferrals(db, filters),
     db.execute(
       "SELECT code, label FROM referral_statuses ORDER BY label COLLATE NOCASE",
     ),
+    db.execute({
+      sql: "SELECT columns_json FROM admin_dashboard_preferences WHERE admin_id = ?",
+      args: [admin.id],
+    }),
   ]);
+  const storedColumns: unknown = preferenceResult.rows[0]
+    ? JSON.parse(String(preferenceResult.rows[0].columns_json))
+    : null;
+  const initialColumns: ReferralColumnKey[] | null =
+    Array.isArray(storedColumns) &&
+    storedColumns.length > 0 &&
+    storedColumns.every(
+      (column) => typeof column === "string" && isReferralColumn(column),
+    )
+      ? [...new Set(storedColumns)]
+      : null;
 
   return (
     <main className="dashboard-page">
@@ -68,18 +88,16 @@ export default async function Dashboard({
       </section>
       <form className="search-panel" method="get">
         <div className="search-grid">
-          <label>
-            <span>Referral date from</span>
-            <input
-              type="date"
-              name="dateFrom"
-              defaultValue={filters.dateFrom}
-            />
-          </label>
-          <label>
-            <span>Referral date to</span>
-            <input type="date" name="dateTo" defaultValue={filters.dateTo} />
-          </label>
+          <DateFilterPicker
+            label="Referral date from"
+            name="dateFrom"
+            defaultValue={filters.dateFrom}
+          />
+          <DateFilterPicker
+            label="Referral date to"
+            name="dateTo"
+            defaultValue={filters.dateTo}
+          />
           <label>
             <span>Candidate name</span>
             <input
@@ -166,6 +184,7 @@ export default async function Dashboard({
           rows={results.rows}
           total={results.total}
           exportQuery={filterQuery(filters)}
+          initialColumns={initialColumns}
         />
         {results.pageCount > 1 && (
           <nav className="pagination" aria-label="Results pages">

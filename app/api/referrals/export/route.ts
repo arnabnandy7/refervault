@@ -29,11 +29,18 @@ export async function GET(request: Request) {
   const labels = new Map(
     REFERRAL_COLUMNS.map((column) => [column.key, column.label]),
   );
+  const headers = columns.map((column) => labels.get(column) ?? column);
+  const values = rows.map((row) =>
+    columns.map((column) => cleanCell(row[column])),
+  );
+  if (params.get("format") === "json")
+    return Response.json(
+      { headers, rows: values },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   const output = [
-    columns.map((column) => labels.get(column)).join("\t"),
-    ...rows.map((row) =>
-      columns.map((column) => cleanCell(row[column])).join("\t"),
-    ),
+    headers.join("\t"),
+    ...values.map((row) => row.join("\t")),
   ].join("\r\n");
 
   return new Response(output, {

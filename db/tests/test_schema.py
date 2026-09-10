@@ -49,6 +49,27 @@ class SchemaTests(unittest.TestCase):
         self.db.execute("UPDATE admins SET password_hash = ?", (self.HASH_FIXTURE[:-1] + 'C',))
         self.assertNotEqual(self.db.execute("SELECT password_changed_at FROM admins").fetchone()[0], '2000-01-01T00:00:00.000Z')
 
+    def test_dashboard_preferences_require_an_admin_and_json_array(self):
+        self.db.execute(
+            "INSERT INTO admins (id, email, password_hash) VALUES (1, ?, ?)",
+            ('admin@example.test', self.HASH_FIXTURE),
+        )
+        self.db.execute(
+            "INSERT INTO admin_dashboard_preferences (admin_id, columns_json) VALUES (1, ?)",
+            ('[\"candidateName\",\"jobId\"]',),
+        )
+        for admin_id, value in ((999, '[]'), (1, '{}'), (1, 'invalid')):
+            with self.subTest(admin_id=admin_id, value=value):
+                with self.assertRaises(sqlite3.IntegrityError):
+                    self.db.execute(
+                        "INSERT OR REPLACE INTO admin_dashboard_preferences (admin_id, columns_json) VALUES (?, ?)",
+                        (admin_id, value),
+                    )
+        self.assertIn(
+            (4, 'dashboard_preferences'),
+            self.db.execute("SELECT version, name FROM schema_migrations").fetchall(),
+        )
+
     def test_repeat_referrals_and_status_history(self):
         self.db.execute("INSERT INTO referrals (id, candidate_id) VALUES (1, 1), (2, 1)")
         self.db.execute("UPDATE referrals SET status_code = 'under_review' WHERE id = 1")

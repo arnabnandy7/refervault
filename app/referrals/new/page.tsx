@@ -1,0 +1,37 @@
+import { redirect } from "next/navigation";
+import { Brand } from "@/components/brand";
+import { ReferralEntryForm } from "@/components/referral-entry-form";
+import { database } from "@/lib/db";
+import { getAdmin } from "@/lib/session";
+
+export default async function NewReferralPage() {
+  if (!(await getAdmin())) redirect("/login");
+  const result = await database().execute(
+    "SELECT code, label FROM referral_statuses ORDER BY CASE code WHEN 'unknown' THEN 0 WHEN 'referred' THEN 1 ELSE 2 END, label",
+  );
+  const statuses = result.rows.map((row) => ({
+    code: String(row.code),
+    label: String(row.label),
+  }));
+  return (
+    <main className="entry-page">
+      <header className="entry-header">
+        <Brand />
+        <a href="/dashboard">
+          Back to workspace <span aria-hidden="true">↗</span>
+        </a>
+      </header>
+      <section className="entry-intro">
+        <span className="eyebrow">
+          <span />
+          NEW CONNECTION
+        </span>
+        <h1>Add a referral.</h1>
+        <p>
+          Capture the person, the opportunity, and the next step in one place.
+        </p>
+      </section>
+      <ReferralEntryForm statuses={statuses} />
+    </main>
+  );
+}

@@ -1154,35 +1154,35 @@ p {
 }
 .statistics-heading h2 { margin: 5px 0 0; font-size: 24px; }
 .statistics-heading p { color: #777e74; font-size: 11px; }
-.statistics-chart { display: grid; gap: 11px; padding: 28px 0; }
-.statistics-bar-row {
+.statistics-chart { padding: 24px 0; }
+.statistics-chart-hint { color: #777e74; font-size: 12px; text-align: center; }
+.statistics-pie-wrap { position: relative; width: min(100%, 440px); margin: 16px auto 0; }
+.statistics-pie-wrap svg { display: block; width: 100%; height: auto; }
+.statistics-pie-slice { stroke: #fff; stroke-width: 2; cursor: pointer; }
+.statistics-pie-slice[data-active="true"],
+.statistics-pie-slice:focus-visible { filter: brightness(1.15); stroke: #303d29; stroke-width: 3; outline: none; }
+.statistics-pie-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90%;
   display: grid;
-  grid-template-columns: minmax(120px, 230px) 1fr 58px;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
+  gap: 5px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #283323;
+  color: #fff;
+  box-shadow: 0 4px 18px #0002;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  pointer-events: none;
 }
-.statistics-bar-label {
-  overflow: hidden;
-  color: #555c52;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.statistics-bar-track { height: 24px; overflow: hidden; border-radius: 4px; background: #eef0e9; }
-.statistics-bar-fill { display: block; height: 100%; border-radius: 4px; background: #73845d; }
-.statistics-bar-row strong { color: #4e5846; font-size: 11px; text-align: right; }
+.statistics-pie-tooltip span { color: #e0e7da; }
 .statistics-empty { padding: 50px 0; color: #777e74; text-align: center; }
-.statistics-table-wrap { overflow-x: auto; border: 1px solid #e2e3dc; border-radius: 7px; }
-.statistics-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-.statistics-table th,
-.statistics-table td { padding: 10px 12px; border-bottom: 1px solid #e8e9e3; text-align: left; }
-.statistics-table th { background: #f2f4ed; color: #58634f; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; }
-.statistics-table th:last-child,
-.statistics-table td:last-child { width: 140px; text-align: right; }
 @media (max-width: 700px) {
   .statistics-controls { grid-template-columns: 1fr; }
-  .statistics-bar-row { grid-template-columns: minmax(90px, 1fr) 2fr 46px; gap: 8px; }
   .statistics-page { padding-inline: 18px; }
 }
 .date-picker {

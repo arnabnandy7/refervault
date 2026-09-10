@@ -5,7 +5,7 @@ import {
   REFERRAL_COLUMNS,
   type ReferralColumnKey,
 } from "@/lib/referral-columns";
-import type { ReferralSearchRow } from "@/lib/referral-search";
+import type { ReferralFilters, ReferralSearchRow } from "@/lib/referral-search";
 
 const ALL_COLUMNS = REFERRAL_COLUMNS.map((column) => column.key);
 
@@ -89,12 +89,12 @@ const escapeHtml = (value: string) =>
 export function ReferralResults({
   rows,
   total,
-  exportQuery,
+  exportFilters,
   initialColumns,
 }: {
   rows: ReferralSearchRow[];
   total: number;
-  exportQuery: string;
+  exportFilters: ReferralFilters;
   initialColumns: ReferralColumnKey[] | null;
 }) {
   const [columns, setColumns] = useState<ReferralColumnKey[]>(
@@ -155,12 +155,12 @@ export function ReferralResults({
   const copyResults = async () => {
     setCopyState("copying");
     try {
-      const params = new URLSearchParams(exportQuery);
-      params.set("columns", columns.join(","));
-      params.set("format", "json");
-      const response = await fetch(
-        `/api/referrals/export?${params.toString()}`,
-      );
+      const response = await fetch("/api/referrals/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filters: exportFilters, columns }),
+        cache: "no-store",
+      });
       if (!response.ok) throw new Error("Export failed");
       const payload = (await response.json()) as {
         headers: string[];

@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 function parts(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -35,6 +39,7 @@ export function DateFilterPicker({
   const today = new Date();
   const [value, setValue] = useState(initialValue);
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"day" | "month" | "year">("day");
   const [view, setView] = useState({
     year: selected?.year ?? today.getFullYear(),
     month: selected?.month ?? today.getMonth(),
@@ -53,6 +58,7 @@ export function DateFilterPicker({
         month: resetDate?.month ?? now.getMonth(),
       });
       setOpen(false);
+      setMode("day");
     };
     form.addEventListener("reset", reset);
     return () => form.removeEventListener("reset", reset);
@@ -79,11 +85,16 @@ export function DateFilterPicker({
   const cells = Array.from({ length: firstDay + days }, (_, index) =>
     index < firstDay ? null : index - firstDay + 1,
   );
-  const moveMonth = (amount: number) =>
+  const moveView = (amount: number) =>
     setView((current) => {
-      const next = new Date(current.year, current.month + amount, 1);
+      const next = new Date(
+        current.year + (mode === "year" ? amount * 12 : mode === "month" ? amount : 0),
+        current.month + (mode === "day" ? amount : 0),
+        1,
+      );
       return { year: next.getFullYear(), month: next.getMonth() };
     });
+  const yearGroupStart = Math.floor(view.year / 12) * 12;
 
   return (
     <div
@@ -95,7 +106,10 @@ export function DateFilterPicker({
         <button
           className="date-picker-trigger"
           type="button"
-          onClick={() => setOpen((current) => !current)}
+          onClick={() => {
+            if (!open) setMode("day");
+            setOpen((current) => !current);
+          }}
           aria-expanded={open}
           aria-haspopup="dialog"
           aria-label={`${label}: ${value || "not selected"}`}
@@ -112,26 +126,52 @@ export function DateFilterPicker({
             <div className="calendar-heading">
               <button
                 type="button"
-                onClick={() => moveMonth(-1)}
-                aria-label="Previous month"
+                onClick={() => moveView(-1)}
+                aria-label={mode === "year" ? "Previous 12 years" : mode === "month" ? "Previous year" : "Previous month"}
               >
                 ‹
               </button>
-              <strong>
-                {new Intl.DateTimeFormat("en", {
-                  month: "long",
-                  year: "numeric",
-                }).format(new Date(view.year, view.month, 1))}
-              </strong>
+              <div className="calendar-jump">
+                {mode === "year" ? (
+                  <strong>{yearGroupStart}–{yearGroupStart + 11}</strong>
+                ) : (
+                  <>
+                    <button type="button" className="calendar-period" onClick={() => setMode("month")}>{MONTHS[view.month]}</button>
+                    <button type="button" className="calendar-period" onClick={() => setMode("year")}>{view.year}</button>
+                  </>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() => moveMonth(1)}
-                aria-label="Next month"
+                onClick={() => moveView(1)}
+                aria-label={mode === "year" ? "Next 12 years" : mode === "month" ? "Next year" : "Next month"}
               >
                 ›
               </button>
             </div>
-            <div className="calendar-grid">
+            {mode === "year" ? (
+              <div className="calendar-choice-grid year-grid">
+                {Array.from({ length: 12 }, (_, index) => yearGroupStart + index).map((year) => (
+                  <button
+                    type="button"
+                    className={year === view.year ? "selected" : ""}
+                    key={year}
+                    onClick={() => { setView((current) => ({ ...current, year })); setMode("month"); }}
+                  >{year}</button>
+                ))}
+              </div>
+            ) : mode === "month" ? (
+              <div className="calendar-choice-grid month-grid">
+                {MONTHS.map((month, index) => (
+                  <button
+                    type="button"
+                    className={index === view.month ? "selected" : ""}
+                    key={month}
+                    onClick={() => { setView((current) => ({ ...current, month: index })); setMode("day"); }}
+                  >{month.slice(0, 3)}</button>
+                ))}
+              </div>
+            ) : <div className="calendar-grid">
               {WEEKDAYS.map((day) => (
                 <span className="calendar-weekday" key={day}>
                   {day}
@@ -158,12 +198,13 @@ export function DateFilterPicker({
                   <span key={`blank-${index}`} />
                 ),
               )}
-            </div>
+            </div>}
             <div className="calendar-footer">
               <button
                 type="button"
                 onClick={() => {
                   setValue("");
+                  setMode("day");
                   setOpen(false);
                 }}
               >
@@ -177,6 +218,7 @@ export function DateFilterPicker({
                     dateValue(now.getFullYear(), now.getMonth(), now.getDate()),
                   );
                   setView({ year: now.getFullYear(), month: now.getMonth() });
+                  setMode("day");
                   setOpen(false);
                 }}
               >

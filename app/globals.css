@@ -839,6 +839,12 @@ p {
   color: #777d73;
   font-size: 11px;
 }
+.search-actions .search-clear {
+  padding-inline: 0;
+  background: transparent;
+  color: #777d73;
+  font-weight: 500;
+}
 .search-actions button {
   padding: 13px 22px;
   border: 0;
@@ -1229,6 +1235,31 @@ p {
   align-items: center;
   justify-content: space-between;
 }
+.calendar-jump {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+.calendar-heading .calendar-period {
+  width: auto;
+  height: 31px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.calendar-heading .calendar-period:hover,
+.calendar-heading .calendar-period:focus-visible {
+  background: #e8ecdf;
+  outline: 2px solid #b8cb972c;
+}
+.calendar-jump strong {
+  color: #4f584b;
+  font-size: 13px;
+  font-weight: 800;
+}
 .calendar-heading strong {
   font-family: var(--font-serif);
   font-size: 16px;
@@ -1278,6 +1309,28 @@ p {
   background: #73845d;
   color: #fff;
   font-weight: 800;
+}
+.calendar-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-top: 14px;
+}
+.calendar-choice-grid button {
+  min-height: 43px;
+  border: 0;
+  border-radius: 6px;
+  background: #f5f6f0;
+  color: #555e50;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+}
+.calendar-choice-grid button:hover { background: #e8ecdf; }
+.calendar-choice-grid button.selected {
+  background: #73845d;
+  color: #fff;
 }
 .calendar-footer {
   margin-top: 11px;
@@ -1394,6 +1447,24 @@ p {
 .pagination a {
   color: #596b47;
   font-weight: 700;
+}
+.pagination button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #596b47;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+.pagination button:disabled { cursor: default; opacity: 0.5; }
+.dashboard-search-error {
+  margin: 16px 0 0;
+  padding: 12px 15px;
+  border-radius: 7px;
+  background: #fcf0eb;
+  color: #9b4637;
+  font-size: 11px;
 }
 @media (min-width: 1500px) {
   .story-panel {

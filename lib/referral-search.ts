@@ -38,7 +38,8 @@ export type ReferralSearchRow = {
 
 const value = (raw: RawSearchParams, key: string) => {
   const input = raw[key];
-  return (Array.isArray(input) ? input[0] : input)?.trim() ?? "";
+  const selected = Array.isArray(input) ? input[0] : input;
+  return selected == null ? "" : String(selected).trim();
 };
 const validDate = (input: string) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input)) return "";

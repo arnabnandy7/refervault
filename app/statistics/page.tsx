@@ -72,18 +72,6 @@ export default async function StatisticsPage({
           <p>{shown.toLocaleString()} referrals shown</p>
         </div>
         <StatisticsChart rows={rows} />
-        <div className="statistics-table-wrap">
-          <table className="statistics-table">
-            <thead>
-              <tr><th>{selected.label}</th><th>Referral count</th></tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.label}><td>{row.label}</td><td>{row.count.toLocaleString()}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </section>
     </main>
   );

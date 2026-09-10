@@ -25,16 +25,38 @@ function Cell({
       return <strong>{row.jobId ?? "—"}</strong>;
     case "originalEmails":
       return row.originalEmails ?? "—";
+    case "mobileNumbers":
+      return row.mobileNumbers ?? "—";
     case "referredEmail":
       return row.referredEmail ?? "—";
+    case "experience":
+      return row.experience ?? "—";
     case "company":
       return row.company ?? "—";
     case "status":
       return <span className="status-pill">{row.status}</span>;
+    case "referredTo":
+      return row.referredTo ?? "—";
+    case "currentLocation":
+      return row.currentLocation ?? "—";
+    case "preferredLocation":
+      return row.preferredLocation ?? "—";
+    case "noticePeriod":
+      return row.noticePeriod ?? "—";
+    case "remarks":
+      return row.remarks ?? "—";
     case "poc":
       return row.poc ?? "—";
     case "skillset":
       return row.skillset ?? "—";
+    case "linkedin":
+      return row.linkedin ? (
+        <a href={row.linkedin} target="_blank" rel="noreferrer">
+          {row.linkedin}
+        </a>
+      ) : (
+        "—"
+      );
   }
 }
 
@@ -113,8 +135,22 @@ export function ReferralResults({
         ? current.length === 1
           ? current
           : current.filter((key) => key !== column)
-        : ALL_COLUMNS.filter((key) => current.includes(key) || key === column),
+        : [...current, column],
     );
+
+  const moveColumn = (column: ReferralColumnKey, direction: -1 | 1) =>
+    setColumns((current) => {
+      const index = current.indexOf(column);
+      const destination = index + direction;
+      if (index < 0 || destination < 0 || destination >= current.length)
+        return current;
+      const reordered = [...current];
+      [reordered[index], reordered[destination]] = [
+        reordered[destination],
+        reordered[index],
+      ];
+      return reordered;
+    });
 
   const copyResults = async () => {
     setCopyState("copying");
@@ -175,12 +211,17 @@ export function ReferralResults({
     }
   };
 
-  const matchingColumns = REFERRAL_COLUMNS.filter((column) =>
+  const columnByKey = new Map(
+    REFERRAL_COLUMNS.map((column) => [column.key, column]),
+  );
+  const pickerColumns = [
+    ...columns.map((key) => columnByKey.get(key)!),
+    ...REFERRAL_COLUMNS.filter((column) => !columns.includes(column.key)),
+  ];
+  const matchingColumns = pickerColumns.filter((column) =>
     column.label.toLowerCase().includes(columnSearch.trim().toLowerCase()),
   );
-  const visibleColumns = REFERRAL_COLUMNS.filter((column) =>
-    columns.includes(column.key),
-  );
+  const visibleColumns = columns.map((key) => columnByKey.get(key)!);
   const preferenceUnchanged = savedColumns?.join(",") === columns.join(",");
 
   if (!rows.length)
@@ -219,14 +260,40 @@ export function ReferralResults({
               </label>
               <div className="column-options">
                 {matchingColumns.map((column) => (
-                  <label key={column.key}>
-                    <input
-                      type="checkbox"
-                      checked={columns.includes(column.key)}
-                      onChange={() => toggleColumn(column.key)}
-                    />
-                    <span>{column.label}</span>
-                  </label>
+                  <div className="column-option" key={column.key}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={columns.includes(column.key)}
+                        onChange={() => toggleColumn(column.key)}
+                      />
+                      <span>{column.label}</span>
+                    </label>
+                    {columns.includes(column.key) && (
+                      <span className="column-order-actions">
+                        <button
+                          type="button"
+                          aria-label={`Move ${column.label} left`}
+                          title="Move column left"
+                          disabled={columns.indexOf(column.key) === 0}
+                          onClick={() => moveColumn(column.key, -1)}
+                        >
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Move ${column.label} right`}
+                          title="Move column right"
+                          disabled={
+                            columns.indexOf(column.key) === columns.length - 1
+                          }
+                          onClick={() => moveColumn(column.key, 1)}
+                        >
+                          →
+                        </button>
+                      </span>
+                    )}
+                  </div>
                 ))}
                 {!matchingColumns.length && (
                   <p className="column-no-results">No columns found.</p>

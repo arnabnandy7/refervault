@@ -4,6 +4,7 @@ import { logout } from "@/app/login/actions";
 import { Brand } from "@/components/brand";
 import { ReferralResults } from "@/components/referral-results";
 import { DateFilterPicker } from "@/components/date-filter-picker";
+import { PocFilter } from "@/components/poc-filter";
 import { database } from "@/lib/db";
 import {
   isReferralColumn,
@@ -73,6 +74,9 @@ export default async function Dashboard({
       <header className="dashboard-header">
         <Brand />
         <div className="dashboard-header-actions">
+          <Link className="dashboard-add dashboard-statistics" href="/statistics">
+            Statistics
+          </Link>
           <Link className="dashboard-add" href="/referrals/new">
             Add referral <span aria-hidden="true">+</span>
           </Link>
@@ -143,14 +147,7 @@ export default async function Dashboard({
               ))}
             </select>
           </label>
-          <label>
-            <span>PoC</span>
-            <input
-              name="poc"
-              defaultValue={filters.poc}
-              placeholder="Name or reference"
-            />
-          </label>
+          <PocFilter defaultValue={filters.poc} />
           <label className="search-skill">
             <span>Skillset</span>
             <input

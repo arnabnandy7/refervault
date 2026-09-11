@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { ReferralEntryForm } from "@/components/referral-entry-form";
+import { ReferralImportForm } from "@/components/referral-import-form";
 import { database } from "@/lib/db";
 import { getAdmin } from "@/lib/session";
 
@@ -42,6 +43,8 @@ export default async function NewReferralPage() {
           Capture the person, the opportunity, and the next step in one place.
         </p>
       </section>
+      <ReferralImportForm statuses={statuses} />
+      <p className="manual-entry-label">Or add a referral manually</p>
       <ReferralEntryForm
         statuses={statuses}
         initialValues={{ referredDate: currentDate }}

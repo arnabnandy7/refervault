@@ -1672,3 +1672,13 @@ p {
     scroll-behavior: auto !important;
   }
 }
+.import-panel { margin-bottom: 24px; }
+.import-panel > p, .import-guidance { line-height: 1.6; }
+.import-panel a { color: inherit; text-underline-offset: 4px; }
+.import-guidance { margin: 20px 0; }
+.import-guidance summary { cursor: pointer; font-weight: 600; }
+.import-guidance ol { columns: 2; padding-left: 24px; }
+.import-guidance li { break-inside: avoid; }
+.import-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.manual-entry-label { margin: 28px 0; text-align: center; }
+@media (max-width: 600px) { .import-guidance ol { columns: 1; } }

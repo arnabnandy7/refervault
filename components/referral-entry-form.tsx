@@ -204,6 +204,12 @@ export function ReferralEntryForm({
           error={state.errors.company}
           defaultValue={displayedValues.company}
         />
+        <Field
+          label="Point of contact"
+          name="poc"
+          placeholder="Name or employee ID"
+          defaultValue={displayedValues.poc}
+        />
         <label className="entry-field">
           <span>Job IDs</span>
           <textarea
@@ -220,17 +226,11 @@ export function ReferralEntryForm({
             preserved.
           </small>
         </label>
-        <Field
-          label="Point of contact"
-          name="poc"
-          placeholder="Name or employee ID"
-          defaultValue={displayedValues.poc}
-        />
-        <label className="entry-field entry-wide">
+        <label className="entry-field">
           <span>Remarks</span>
           <textarea
             name="remarks"
-            rows={4}
+            rows={3}
             placeholder="Notes about the candidate or referral"
             defaultValue={displayedValues.remarks}
           />

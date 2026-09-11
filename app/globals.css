@@ -659,7 +659,9 @@ p {
 .entry-field textarea {
   min-height: 105px;
   padding-top: 13px;
-  resize: vertical;
+  resize: none;
+  overflow-y: auto;
+  font-family: inherit;
   line-height: 1.5;
 }
 .entry-field input:focus,
@@ -1680,6 +1682,35 @@ p {
 .import-guidance ol { columns: 2; padding-left: 24px; }
 .import-guidance li { break-inside: avoid; }
 .import-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.import-fields input[type="file"] {
+  padding: 6px;
+  font-family: inherit;
+  line-height: 33px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.import-fields input[type="file"]::file-selector-button {
+  margin: 0 12px 0 0;
+  padding: 0 14px;
+  border: 1px solid #dce4ce;
+  border-radius: 5px;
+  background: #edf2e4;
+  color: var(--green);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 31px;
+  cursor: pointer;
+}
+.import-fields input[type="file"]:not(:disabled):hover::file-selector-button {
+  background: var(--accent);
+  border-color: #bccda2;
+}
+.import-fields input[type="file"]:disabled,
+.import-fields input[type="file"]:disabled::file-selector-button {
+  cursor: wait;
+  opacity: 0.65;
+}
 .entry-intro-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .entry-alternative { color: var(--green); font-size: 13px; font-weight: 600; white-space: nowrap; text-decoration: underline; text-underline-offset: 4px; }
 .entry-alternative:hover { color: var(--ink); }

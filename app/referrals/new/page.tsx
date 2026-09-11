@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { ReferralEntryForm } from "@/components/referral-entry-form";
-import { ReferralImportForm } from "@/components/referral-import-form";
 import { database } from "@/lib/db";
 import { getAdmin } from "@/lib/session";
 
@@ -34,17 +33,20 @@ export default async function NewReferralPage() {
         </a>
       </header>
       <section className="entry-intro">
-        <span className="eyebrow">
-          <span />
-          NEW CONNECTION
-        </span>
+        <div className="entry-intro-tools">
+          <span className="eyebrow">
+            <span />
+            NEW CONNECTION
+          </span>
+          <a className="entry-alternative" href="/referrals/import">
+            Upload Excel <span aria-hidden="true">↗</span>
+          </a>
+        </div>
         <h1>Add a referral.</h1>
         <p>
           Capture the person, the opportunity, and the next step in one place.
         </p>
       </section>
-      <ReferralImportForm statuses={statuses} />
-      <p className="manual-entry-label">Or add a referral manually</p>
       <ReferralEntryForm
         statuses={statuses}
         initialValues={{ referredDate: currentDate }}

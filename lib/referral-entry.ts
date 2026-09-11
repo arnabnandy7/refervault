@@ -57,8 +57,9 @@ function list(value: string) {
 }
 
 export async function createReferralEntry(
-  db: Client,
+  db: Pick<Client, "execute" | "batch">,
   form: FormData,
+  source?: { file: string; sheet: string; row: number },
 ): Promise<EntryState> {
   const submittedValues = submittedEntryValues(form);
   const value = {
@@ -254,8 +255,8 @@ export async function createReferralEntry(
           ],
         },
         {
-          sql: "INSERT INTO import_rows (source_file, sheet_name, row_number, raw_values_json, candidate_id, referral_id) VALUES ('ReferVault entry form', 'Manual Entry', ?, ?, ?, ?)",
-          args: [index + 1, JSON.stringify(rawValues), candidateId, referralId],
+          sql: "INSERT INTO import_rows (source_file, sheet_name, row_number, raw_values_json, candidate_id, referral_id) VALUES (?, ?, ?, ?, ?, ?)",
+          args: [source?.file ?? "ReferVault entry form", source?.sheet ?? "Manual Entry", source?.row ?? index + 1, JSON.stringify(rawValues), candidateId, referralId],
         },
       ];
     }),

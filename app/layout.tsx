@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Manrope } from "next/font/google";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { THEME_INITIALIZATION_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const bodyFont = DM_Sans({ subsets: ["latin"], variable: "--font-body" });
@@ -15,9 +17,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_INITIALIZATION_SCRIPT }}
+        />
+      </head>
       <body className={`${bodyFont.variable} ${headingFont.variable}`}>
         {children}
+        <ThemeToggle />
       </body>
     </html>
   );

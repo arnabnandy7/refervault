@@ -1137,6 +1137,16 @@ p {
   letter-spacing: normal;
 }
 .statistics-controls select { padding: 0 11px; }
+.entry-field select,
+.search-grid select,
+.statistics-controls select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='m1 1 4 4 4-4' fill='none' stroke='%23656d63' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 6px;
+}
 .statistics-controls button {
   padding: 0 18px;
   border-color: #73845d;
@@ -1788,7 +1798,7 @@ html[data-theme="dark"] .column-picker-trigger,
 html[data-theme="dark"] .column-order-actions button,
 html[data-theme="dark"] .column-preference-actions button {
   border-color: #465249;
-  background: #151d18;
+  background-color: #151d18;
   color: var(--ink);
 }
 html[data-theme="dark"] input::placeholder,

@@ -67,8 +67,18 @@ export function DashboardSearch({
         onSubmit={(event) => { event.preventDefault(); void search(); }}
       >
         <div className="search-grid">
-          <DateFilterPicker label="Referral date from" name="dateFrom" />
-          <DateFilterPicker label="Referral date to" name="dateTo" />
+          <DateFilterPicker
+            label="Referral date from"
+            name="dateFrom"
+            defaultValue={initialResult.filters.dateFrom}
+            clearOnReset
+          />
+          <DateFilterPicker
+            label="Referral date to"
+            name="dateTo"
+            defaultValue={initialResult.filters.dateTo}
+            clearOnReset
+          />
           <label><span>Candidate name</span><input name="candidateName" placeholder="e.g. Priya Sharma" /></label>
           <label><span>Job ID</span><input name="jobId" placeholder="e.g. 123456" /></label>
           <label><span>Original email ID</span><input type="email" name="originalEmail" placeholder="candidate@example.com" /></label>

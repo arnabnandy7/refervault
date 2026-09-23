@@ -12,7 +12,21 @@ export default async function Dashboard() {
   const admin = await getAdmin();
   if (!admin) redirect("/login");
   const db = database();
-  const filters = parseReferralFilters({});
+  const todayParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(new Date())
+      .map((part) => [part.type, part.value]),
+  );
+  const currentDate = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
+  const filters = parseReferralFilters({
+    dateFrom: currentDate,
+    dateTo: currentDate,
+  });
   const [results, statusesResult, preferenceResult] = await Promise.all([
     searchReferrals(db, filters),
     db.execute("SELECT code, label FROM referral_statuses ORDER BY label COLLATE NOCASE"),

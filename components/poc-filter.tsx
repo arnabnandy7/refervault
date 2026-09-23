@@ -1,11 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function PocFilter({ defaultValue }: { defaultValue: string }) {
   const [value, setValue] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
+  const root = useRef<HTMLLabelElement>(null);
+
+  useEffect(() => {
+    const form = root.current?.closest("form");
+    if (!form) return;
+    const reset = () => {
+      setValue(defaultValue);
+      setSuggestions([]);
+      setFocused(false);
+    };
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, [defaultValue]);
 
   useEffect(() => {
     const query = value.trim();
@@ -33,7 +46,7 @@ export function PocFilter({ defaultValue }: { defaultValue: string }) {
   }, [focused, value]);
 
   return (
-    <label className="poc-filter">
+    <label className="poc-filter" ref={root}>
       <span>PoC</span>
       <input
         name="poc"

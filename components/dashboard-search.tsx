@@ -34,6 +34,11 @@ export function DashboardSearch({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const form = useRef<HTMLFormElement>(null);
+  const resetFilters = {
+    ...emptyFilters,
+    dateFrom: initialResult.filters.dateFrom,
+    dateTo: initialResult.filters.dateTo,
+  };
 
   const search = async (page = 1, filters?: ReferralFilters) => {
     const values = filters ?? Object.fromEntries(new FormData(form.current!));
@@ -71,13 +76,11 @@ export function DashboardSearch({
             label="Referral date from"
             name="dateFrom"
             defaultValue={initialResult.filters.dateFrom}
-            clearOnReset
           />
           <DateFilterPicker
             label="Referral date to"
             name="dateTo"
             defaultValue={initialResult.filters.dateTo}
-            clearOnReset
           />
           <label><span>Candidate name</span><input name="candidateName" placeholder="e.g. Priya Sharma" /></label>
           <label><span>Job ID</span><input name="jobId" placeholder="e.g. 123456" /></label>
@@ -91,7 +94,7 @@ export function DashboardSearch({
           <button
             className="search-clear"
             type="button"
-            onClick={() => { form.current?.reset(); void search(1, emptyFilters); }}
+            onClick={() => { form.current?.reset(); void search(1, resetFilters); }}
           >Clear filters</button>
           <button type="submit" disabled={loading}>{loading ? "Searching…" : "Search referrals"}</button>
         </div>

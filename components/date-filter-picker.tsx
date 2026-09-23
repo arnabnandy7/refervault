@@ -27,14 +27,12 @@ export function DateFilterPicker({
   defaultValue,
   error,
   variant = "filter",
-  clearOnReset = false,
 }: {
   label: string;
   name: string;
   defaultValue?: string;
   error?: string;
   variant?: "filter" | "entry";
-  clearOnReset?: boolean;
 }) {
   const initialValue = defaultValue ?? "";
   const selected = parts(initialValue);
@@ -52,10 +50,9 @@ export function DateFilterPicker({
     const form = root.current?.closest("form");
     if (!form) return;
     const reset = () => {
-      const resetValue = clearOnReset ? "" : initialValue;
-      const resetDate = parts(resetValue);
+      const resetDate = parts(initialValue);
       const now = new Date();
-      setValue(resetValue);
+      setValue(initialValue);
       setView({
         year: resetDate?.year ?? now.getFullYear(),
         month: resetDate?.month ?? now.getMonth(),
@@ -65,7 +62,7 @@ export function DateFilterPicker({
     };
     form.addEventListener("reset", reset);
     return () => form.removeEventListener("reset", reset);
-  }, [clearOnReset, initialValue]);
+  }, [initialValue]);
 
   useEffect(() => {
     if (!open) return;

@@ -132,23 +132,28 @@ export async function createReferralEntry(
   let existingCandidateId: number | null = null;
   let existingCandidateName = "";
   if (contacts.length) {
-    const placeholders = contacts.map(() => "?").join(",");
+    const contactConditions = contacts
+      .map(() => "(cc.contact_type = ? AND lower(cc.value) = ?)")
+      .join(" OR ");
     const matches = await db.execute({
-      sql: `SELECT DISTINCT c.id, c.name FROM candidate_contacts cc JOIN candidates c ON c.id = cc.candidate_id WHERE lower(cc.value) IN (${placeholders})`,
-      args: contacts.map((contact) => contact.value.toLowerCase()),
+      sql: `SELECT c.id, c.name, COUNT(*) AS matched_contacts
+        FROM candidate_contacts cc JOIN candidates c ON c.id = cc.candidate_id
+        WHERE ${contactConditions}
+        GROUP BY c.id, c.name
+        ORDER BY matched_contacts DESC, c.created_at, c.id`,
+      args: contacts.flatMap((contact) => [
+        contact.type,
+        contact.value.toLowerCase(),
+      ]),
     });
-    if (matches.rows.length > 1) {
-      return {
-        status: "error",
-        message:
-          "The supplied contacts match more than one candidate. Review the email addresses and phone numbers.",
-        errors: {},
-        values: submittedValues,
-      };
-    }
-    if (matches.rows[0]) {
-      existingCandidateId = Number(matches.rows[0].id);
-      existingCandidateName = String(matches.rows[0].name);
+    const completeMatch = matches.rows.find(
+      (match) => Number(match.matched_contacts) === contacts.length,
+    );
+    const match =
+      completeMatch ?? (matches.rows.length === 1 ? matches.rows[0] : null);
+    if (match) {
+      existingCandidateId = Number(match.id);
+      existingCandidateName = String(match.name);
     }
   }
 

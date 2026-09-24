@@ -159,6 +159,72 @@ test("entry form adds referrals to a candidate with an existing contact", async 
   }
 });
 
+test("entry form adds a new contact to one partially matching candidate", async () => {
+  const db = await testDatabase();
+  try {
+    const first = validEntry();
+    first.set("originalEmails", "ananya@example.test");
+    first.set("mobileNumbers", "");
+    assert.equal((await createReferralEntry(db, first)).status, "success");
+
+    const second = validEntry();
+    second.set("originalEmails", "ananya@example.test");
+    second.set("mobileNumbers", "9000000000");
+    assert.equal((await createReferralEntry(db, second)).status, "success");
+
+    assert.equal(
+      (await db.execute("SELECT count(*) AS count FROM candidates")).rows[0]
+        .count,
+      1,
+    );
+    assert.equal(
+      (
+        await db.execute(
+          "SELECT count(*) AS count FROM candidate_contacts WHERE value='9000000000'",
+        )
+      ).rows[0].count,
+      1,
+    );
+  } finally {
+    db.close();
+  }
+});
+
+test("entry form preserves split matches and reuses the combined contact set", async () => {
+  const db = await testDatabase();
+  try {
+    await db.executeMultiple(`
+      INSERT INTO candidates (id, name) VALUES (1, 'Ananya Email'), (2, 'Ananya Phone');
+      INSERT INTO candidate_contacts (candidate_id, contact_type, value, is_primary)
+        VALUES (1, 'email', 'ananya@example.test', 1),
+               (2, 'phone', '9876543210', 1);
+    `);
+    const form = validEntry();
+    form.set("originalEmails", "ananya@example.test");
+    form.set("mobileNumbers", "9876543210");
+
+    assert.equal((await createReferralEntry(db, form)).status, "success");
+    assert.equal((await createReferralEntry(db, form)).status, "success");
+
+    assert.equal(
+      (await db.execute("SELECT count(*) AS count FROM candidates")).rows[0]
+        .count,
+      3,
+    );
+    const combined = await db.execute(`
+      SELECT c.id, count(DISTINCT cc.contact_type || ':' || lower(cc.value)) AS contact_count,
+        (SELECT count(*) FROM referrals r WHERE r.candidate_id = c.id) AS referral_count
+      FROM candidates c JOIN candidate_contacts cc ON cc.candidate_id = c.id
+      WHERE lower(cc.value) IN ('ananya@example.test', '9876543210')
+      GROUP BY c.id HAVING contact_count = 2
+    `);
+    assert.equal(combined.rows.length, 1);
+    assert.equal(combined.rows[0].referral_count, 4);
+  } finally {
+    db.close();
+  }
+});
+
 test("edit form updates the candidate and selected referral", async () => {
   const db = await testDatabase();
   try {
